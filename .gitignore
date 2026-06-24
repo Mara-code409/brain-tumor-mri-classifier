@@ -1,0 +1,22 @@
+# Dataset (download separately from Kaggle - see README)
+brisc2025/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.synctex.gz
