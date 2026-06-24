@@ -1,75 +1,52 @@
-# Brain Tumor Classification from MRI Images
+# 🧠 Brain Tumor MRI Classifier
 
-Four-class brain tumor classifier built on a fine-tuned **EfficientNet-B0** convolutional neural network. The model sorts brain MRI scans into **glioma**, **meningioma**, **pituitary tumor**, or **no tumor**, and reaches **98.10% test accuracy** (macro F1 = 0.98) when fine-tuned from ImageNet weights.
+Diagnosing a brain tumor from an MRI scan is still mostly a manual job for radiologists — it is slow, and two doctors can read the same scan differently. So I built a deep learning classifier that sorts brain MRI scans into four categories: **glioma**, **meningioma**, **pituitary tumor**, or **no tumor** at all. The core of it is a fine-tuned **EfficientNet-B0**, and it reaches **98.10% test accuracy** with a macro F1-score of 0.98.
 
-This repository accompanies a short IEEE-style paper describing the project.
+This repo holds the code, the trained models, and a small Streamlit app that runs the classifier on any scan you upload.
+
+## What it does
+
+I built the app so the model is not stuck inside a script. You upload an MRI image, it runs the same preprocessing used during training, and it shows the predicted class along with the probability for each of the four classes. Next to that it displays a **Grad-CAM** overlay — a heatmap of which pixels actually drove the prediction. Getting the right label does not mean the model is looking at the right place, so this was my way of checking. On the scans I tried, the highlighted region lined up with the tumor itself, not some unrelated part of the image.
+
+The four classes look like this:
+
+![MRI samples](assets/samples.png)
+
+<!-- Optional: save a screenshot of the app and drop it here as assets/demo.png, then delete these comment markers
+![App demo](assets/demo.png) -->
 
 ## Results
 
-| Training regime | Test accuracy |
+| Model | Test accuracy |
 |---|---|
 | EfficientNet-B0, pre-trained (ImageNet) | **98.10%** |
-| EfficientNet-B0, trained from scratch | 79.60% |
+| EfficientNet-B0, from scratch | 79.60% |
 
-The ~18-point gap shows how much transfer learning matters on a small medical dataset. Grad-CAM was used to confirm the model attends to the tumor region, and a Streamlit app provides interactive inference.
+What surprised me is that, with the same architecture, the same five epochs, and everything else held constant, the gap is still more than 18 points. A possible explanation is that the low-level features learned from ImageNet — edges, textures, simple shapes — transfer well to MRI images too. I did not expect this to work so well, and since only 5000 training images were available, that head start probably made a big difference.
+
+| Training curves | Confusion matrix |
+|---|---|
+| ![Training](assets/training_curves.png) | ![Confusion matrix](assets/confusion_matrix.png) |
+
+Mistakes are rare, and the few that happen are between tumor types that genuinely look similar. The *no tumor* class comes out classified perfectly, which matters in practice — missing a healthy scan and flagging it as something dangerous would be a costly false alarm.
+
+## Try it yourself
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py        # opens the web app
+```
+
+The other scripts: `metrici.py` trains the pre-trained model and produces the metrics and plots, `train.py` trains the from-scratch baseline, `gradcam.py` runs Grad-CAM on one test image, and `explore_data.py` gives a quick look at the dataset. Run everything from the project root.
 
 ## Dataset
 
-The project uses the **BRISC 2025** dataset (6000 T1-weighted MRI images, 5000 train / 1000 test, balanced across the four classes). It is **not included** in this repository because of its size.
+I used the **BRISC 2025** dataset — 6000 T1-weighted MRI images, 5000 for training and 1000 for testing, roughly balanced across the four classes and captured from axial, coronal, and sagittal planes. It is not included here because of its size; download it from Kaggle and drop it in so the paths look like `brisc2025/classification_task/train/<class>/`.
 
-Download it from Kaggle and place it in the project root so the folder structure looks like this:
+## How the model is set up
 
-```
-brisc2025/classification_task/train/{glioma,meningioma,no_tumor,pituitary}/
-brisc2025/classification_task/test/{glioma,meningioma,no_tumor,pituitary}/
-```
+EfficientNet-B0 backbone, with its original 1000-class head swapped for a new linear layer with four outputs. Adam optimizer at a learning rate of 0.001, cross-entropy loss, batch size 32, five epochs. Each image is resized to 224×224, converted to a tensor, and normalized with the ImageNet mean and standard deviation so the inputs match what the pre-trained backbone expects.
 
-## Project structure
+---
 
-| File | What it does |
-|---|---|
-| `explore_data.py` | Prints class counts and shows one sample image per class |
-| `train.py` | Trains EfficientNet-B0 from scratch and saves `model_efficientnet_notpretrained.pth` |
-| `metrici.py` | Trains the pre-trained model, prints the classification report, and plots loss/accuracy curves + confusion matrix |
-| `gradcam.py` | Runs Grad-CAM on a test image to visualize where the model looks |
-| `app.py` | Streamlit web app for interactive inference with Grad-CAM overlay |
-| `model_efficientnet.pth` | Trained pre-trained model weights (used by `gradcam.py` and `app.py`) |
-| `model_efficientnet_notpretrained.pth` | Weights of the from-scratch model |
-
-## Setup
-
-```bash
-# (optional) create a virtual environment
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-## How to run
-
-Run all commands from the project root (the folder that contains `brisc2025/`).
-
-```bash
-python explore_data.py        # inspect the dataset
-python metrici.py             # train pre-trained model + metrics and plots
-python train.py               # train the from-scratch baseline
-python gradcam.py             # Grad-CAM visualization on a test image
-streamlit run app.py          # launch the interactive web app
-```
-
-## Model
-
-- **Backbone:** EfficientNet-B0 (`torchvision.models`)
-- **Head:** final layer replaced with a 4-class linear layer
-- **Optimizer:** Adam, learning rate 0.001
-- **Loss:** cross-entropy
-- **Batch size:** 32, **epochs:** 5
-- **Preprocessing:** resize to 224×224, ToTensor, normalize with ImageNet mean/std
-
-## Author
-
-Tănase Mara-Ruxandra — Faculty of Mathematics and Computer Science, University of Bucharest.
+*Tănase Mara-Ruxandra — Faculty of Mathematics and Computer Science, University of Bucharest.*
