@@ -1,19 +1,20 @@
 # 🧠 Brain Tumor MRI Classifier
 
-Diagnosing a brain tumor from an MRI scan is still mostly a manual job for radiologists — it is slow, and two doctors can read the same scan differently. So I built a deep learning classifier that sorts brain MRI scans into four categories: **glioma**, **meningioma**, **pituitary tumor**, or **no tumor** at all. The core of it is a fine-tuned **EfficientNet-B0**, and it reaches **98.10% test accuracy** with a macro F1-score of 0.98.
+Diagnosing a brain tumor from an MRI scan is still mostly a manual job for radiologists, it is slow, and two doctors can read the same scan differently. So I built a deep learning classifier that sorts brain MRI scans into four categories: **glioma**, **meningioma**, **pituitary tumor**, or **no tumor** at all. The core of it is a fine-tuned **EfficientNet-B0**, and it reaches **98.10% test accuracy** with a macro F1-score of 0.98.
 
 This repo holds the code, the trained models, and a small Streamlit app that runs the classifier on any scan you upload.
 
 ## What it does
 
-I built the app so the model is not stuck inside a script. You upload an MRI image, it runs the same preprocessing used during training, and it shows the predicted class along with the probability for each of the four classes. Next to that it displays a **Grad-CAM** overlay — a heatmap of which pixels actually drove the prediction. Getting the right label does not mean the model is looking at the right place, so this was my way of checking. On the scans I tried, the highlighted region lined up with the tumor itself, not some unrelated part of the image.
+I built the app so the model is not stuck inside a script. You upload an MRI image, it runs the same preprocessing used during training, and it shows the predicted class along with the probability for each of the four classes. Next to that it displays a **Grad-CAM** overlay: a heatmap of which pixels actually drove the prediction. Getting the right label does not mean the model is looking at the right place, so this was my way of checking. On the scans I tried, the highlighted region lined up with the tumor itself, not some unrelated part of the image.
 
 The four classes look like this:
 
 ![MRI samples](assets/samples.png)
 
-<!-- Optional: save a screenshot of the app and drop it here as assets/demo.png, then delete these comment markers
-![App demo](assets/demo.png) -->
+<img width="1896" height="969" alt="Screenshot 2026-06-24 135613" src="https://github.com/user-attachments/assets/e4c0d5f7-d346-4e60-b205-1e3fad04a8e3" />
+<img width="1920" height="965" alt="Screenshot 2026-06-24 135625" src="https://github.com/user-attachments/assets/8fdd601d-98f8-4bf1-b1b1-6a18a3999680" />
+
 
 ## Results
 
@@ -22,7 +23,7 @@ The four classes look like this:
 | EfficientNet-B0, pre-trained (ImageNet) | **98.10%** |
 | EfficientNet-B0, from scratch | 79.60% |
 
-What surprised me is that, with the same architecture, the same five epochs, and everything else held constant, the gap is still more than 18 points. A possible explanation is that the low-level features learned from ImageNet — edges, textures, simple shapes — transfer well to MRI images too. I did not expect this to work so well, and since only 5000 training images were available, that head start probably made a big difference.
+What surprised me is that, with the same architecture, the same five epochs, and everything else held constant, the gap is still more than 18 points. A possible explanation is that the low-level features learned from ImageNet (edges, textures, simple shapes) transfer well to MRI images too. I did not expect this to work so well, and since only 5000 training images were available, that head start probably made a big difference.
 
 | Training curves | Confusion matrix |
 |---|---|
